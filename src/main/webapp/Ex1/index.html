@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Register for an Account</title>
+		<!-- Bootstrap CSS -->
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+		/>
+		<style>
+			.container {
+				max-width: 600px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+				padding: 20px;
+			}
+			h2 {
+				margin-bottom: 1rem;
+			}
+			.alert-danger {
+				padding-bottom: 0;
+			}
+			@media (max-width: 576px) {
+				.form-check-inline {
+					display: block;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container mt-5">
+			<h2>Register for an Account</h2>
+			<div id="alertContainer" class="alert alert-danger">
+				<ul id="alertList text-center">
+					<li id="alertEmail">Please enter an email address.</li>
+					<li id="alertPhone">Please enter a mobile phone number.</li>
+					<li id="alertUsername">Please enter a username.</li>
+					<li id="alertCountry">Please select a country.</li>
+					<li id="alertTerms">You must agree to the terms of service.</li>
+				</ul>
+			</div>
+			<form id="registrationForm">
+				<div class="form-group">
+					<label for="email">E-Mail:</label>
+					<input type="email" class="form-control" id="email" name="email" required />
+					<span class="error text-danger" id="emailError"></span>
+				</div>
+				<div class="form-group">
+					<label for="phone">Mobile Phone:</label>
+					<input type="tel" class="form-control" id="phone" name="phone" required />
+					<span class="error text-danger" id="phoneError"></span>
+				</div>
+				<div class="form-group">
+					<label for="username">Username:</label>
+					<input type="text" class="form-control" id="username" name="username" required />
+					<span class="error text-danger" id="usernameError"></span>
+				</div>
+				<div class="form-group">
+					<label for="country">Country:</label>
+					<select class="form-control" id="country" name="country" required>
+						<option value="">Select a country</option>
+						<option value="us">United States</option>
+						<option value="ca">Canada</option>
+						<option value="uk">Vietnam</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<div class="form-check form-check-inline"></div>
+					<label>Contact me by:</label>
+					<div class="form-check form-check-inline">
+						<input
+							type="radio"
+							class="form-check-input"
+							id="contactText"
+							name="contact"
+							value="text"
+							checked
+						/>
+						<label class="form-check-label" for="contactText">Text</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input
+							type="radio"
+							class="form-check-input"
+							id="contactEmail"
+							name="contact"
+							value="email"
+						/>
+						<label class="form-check-label" for="contactEmail">Email</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input
+							type="radio"
+							class="form-check-input"
+							id="contactNone"
+							name="contact"
+							value="none"
+						/>
+						<label class="form-check-label" for="contactNone">Don't contact me</label>
+					</div>
+				</div>
+				<div class="form-group form-check">
+					<input type="checkbox" class="form-check-input" id="terms" name="terms" required />
+					<label class="form-check-label" for="terms">I accept the Terms of Service</label>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary">Register</button>
+					<button type="reset" class="btn btn-secondary" id="resetButton">Reset</button>
+				</div>
+			</form>
+		</div>
+
+		<script>
+			document.addEventListener("DOMContentLoaded", function () {
+				const form = document.getElementById("registrationForm");
+				const emailInput = document.getElementById("email");
+				const phoneInput = document.getElementById("phone");
+				const usernameInput = document.getElementById("username");
+				const countrySelect = document.getElementById("country");
+				const termsCheckbox = document.getElementById("terms");
+				const contactRadios = document.getElementsByName("contact");
+				const resetButton = document.getElementById("resetButton");
+
+				const alertContainer = document.getElementById("alertContainer");
+				const alertEmail = document.getElementById("alertEmail");
+				const alertPhone = document.getElementById("alertPhone");
+				const alertUsername = document.getElementById("alertUsername");
+				const alertCountry = document.getElementById("alertCountry");
+				const alertTerms = document.getElementById("alertTerms");
+
+				// Focus on email field on page load
+				emailInput.focus();
+
+				// Load saved values from cookies
+				emailInput.value = getCookie("email") || "";
+				phoneInput.value = getCookie("phone") || "";
+				usernameInput.value = getCookie("username") || "";
+				countrySelect.value = getCookie("country") || "";
+				const contactValue = getCookie("contact");
+				if (contactValue) {
+					for (const radio of contactRadios) {
+						if (radio.value === contactValue) {
+							radio.checked = true;
+							break;
+						}
+					}
+				}
+
+				// Update alerts based on loaded values
+				validateForm();
+
+				// Add event listeners to update alerts dynamically
+				emailInput.addEventListener("input", validateForm);
+				phoneInput.addEventListener("input", validateForm);
+				usernameInput.addEventListener("input", validateForm);
+				countrySelect.addEventListener("change", validateForm);
+				termsCheckbox.addEventListener("change", validateForm);
+
+				form.addEventListener("submit", function (e) {
+					e.preventDefault();
+					if (validateForm()) {
+						// Save values to cookies
+						setCookie("email", emailInput.value, 30);
+						setCookie("phone", phoneInput.value, 30);
+						setCookie("username", usernameInput.value, 30);
+						setCookie("country", countrySelect.value, 30);
+						for (const radio of contactRadios) {
+							if (radio.checked) {
+								setCookie("contact", radio.value, 30);
+								break;
+							}
+						}
+						alert("Form submitted successfully!");
+					}
+				});
+
+				resetButton.addEventListener("click", function () {
+					// Clear cookies
+					clearCookie("email");
+					clearCookie("phone");
+					clearCookie("username");
+					clearCookie("country");
+					clearCookie("contact");
+
+					// Clear input fields
+					emailInput.value = "";
+					phoneInput.value = "";
+					usernameInput.value = "";
+					countrySelect.value = "";
+					termsCheckbox.checked = false;
+					contactRadios[0].checked = true;
+
+					// Update alerts
+					alertEmail.style.display = "list-item";
+					alertPhone.style.display = "list-item";
+					alertUsername.style.display = "list-item";
+					alertCountry.style.display = "list-item";
+					alertTerms.style.display = "list-item";
+					alertContainer.style.display = "block";
+				});
+
+				function validateForm() {
+					let isValid = true;
+
+					// Validate email
+					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+					if (!emailRegex.test(emailInput.value)) {
+						document.getElementById("emailError").textContent =
+							"Please enter a valid email address.";
+						alertEmail.style.display = "list-item";
+						isValid = false;
+					} else {
+						document.getElementById("emailError").textContent = "";
+						alertEmail.style.display = "none";
+					}
+
+					// Validate phone (simple non-empty check)
+					if (phoneInput.value.trim() === "") {
+						document.getElementById("phoneError").textContent = "Please enter a phone number.";
+						alertPhone.style.display = "list-item";
+						isValid = false;
+					} else {
+						document.getElementById("phoneError").textContent = "";
+						alertPhone.style.display = "none";
+					}
+
+					// Validate username
+					if (usernameInput.value.trim() === "") {
+						document.getElementById("usernameError").textContent = "Please enter a username.";
+						alertUsername.style.display = "list-item";
+						isValid = false;
+					} else {
+						document.getElementById("usernameError").textContent = "";
+						alertUsername.style.display = "none";
+					}
+
+					// Validate country
+					if (countrySelect.value === "") {
+						alertCountry.style.display = "list-item";
+						isValid = false;
+					} else {
+						alertCountry.style.display = "none";
+					}
+
+					// Validate terms
+					if (!termsCheckbox.checked) {
+						alertTerms.style.display = "list-item";
+						isValid = false;
+					} else {
+						alertTerms.style.display = "none";
+					}
+
+					// Show or hide alert container
+					if (isValid) {
+						alertContainer.style.display = "none";
+					} else {
+						alertContainer.style.display = "block";
+					}
+
+					return isValid;
+				}
+
+				function setCookie(name, value, days) {
+					const date = new Date();
+					date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+					const expires = "expires=" + date.toUTCString();
+					document.cookie = name + "=" + value + ";" + expires + ";path=/";
+				}
+
+				function getCookie(name) {
+					const decodedCookie = decodeURIComponent(document.cookie);
+					const cookies = decodedCookie.split(";");
+					for (let i = 0; i < cookies.length; i++) {
+						let cookie = cookies[i].trim();
+						if (cookie.indexOf(name + "=") === 0) {
+							return cookie.substring(name.length + 1);
+						}
+					}
+					return "";
+				}
+
+				function clearCookie(name) {
+					document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+				}
+			});
+		</script>
+		<!-- Bootstrap JS and dependencies -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	</body>
+</html>
